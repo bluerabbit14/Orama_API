@@ -366,6 +366,22 @@
   },
   {
     "ContainingType": "Orama_API.Controllers.UserController",
+    "Method": "UpdatePhoneNumber",
+    "RelativePath": "api/User/UpdatePhoneNumber",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Phone",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Orama_API.Controllers.UserController",
     "Method": "UpdateMyProfileAsync",
     "RelativePath": "api/User/UpdateProfile",
     "HttpMethod": "PATCH",

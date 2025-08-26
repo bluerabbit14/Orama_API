@@ -80,8 +80,8 @@ namespace Orama_API.Services
             if (user.Password != logInRequestDto.Password) // Corrected line
                 throw new InvalidOperationException("Invalid Password");
 
-            if (!(user.Role == "User"))
-                throw new InvalidOperationException("Only User login are authorize");
+            //if (!(user.Role == "User"))
+            //    throw new InvalidOperationException("Only User login are authorize");
 
             user.LastLogin = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -194,6 +194,38 @@ namespace Orama_API.Services
                 throw new InvalidOperationException("User is not active");
 
             return user;
+        }
+        public async Task<object> UpdatePhoneNumber(string Phone,string email)
+        {
+            var user = await _context.UserProfilies
+                .FirstOrDefaultAsync(u => u.Email == email);
+            if(user == null)
+                throw new InvalidOperationException("User not found");
+            if (user.IsActive == false)
+                throw new InvalidOperationException("User is not active");
+            if (string.IsNullOrWhiteSpace(Phone))
+                throw new ArgumentException("Phone number is required.");
+            if (Phone.Length < 10 || Phone.Length > 15)
+                throw new ArgumentException("Phone number must be between 10 and 15 digits.");
+            if(!Phone.All(char.IsDigit))
+                throw new ArgumentException("Phone number must contain only digits.");
+
+            var existingUser = await _context.UserProfilies
+                .FirstOrDefaultAsync(u => u.Phone == Phone);
+            if (existingUser != null && existingUser.Email != email)
+                throw new InvalidOperationException("Phone number is already registered with another user.");
+            user.Phone = Phone;
+            user.LastUpdated = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return new
+            {
+                Message = "Phone number updated successfully",
+                UserId = user.UserId,
+                Email = user.Email,
+                Phone = user.Phone,
+                LastUpdated = user.LastUpdated
+            };
+
         }
         public async Task<object> DeleteMyProfileAsync(int id)
         {

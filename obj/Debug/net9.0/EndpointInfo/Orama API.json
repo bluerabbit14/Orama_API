@@ -635,6 +635,27 @@
         }
       }
     },
+    "/api/User/UpdatePhoneNumber": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "name": "Phone",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/User/DeleteMyProfile": {
       "delete": {
         "tags": [

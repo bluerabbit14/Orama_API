@@ -11,6 +11,7 @@ namespace Orama_API.Interfaces
         Task<ChangePasswordResponseDTO> PasswordAsync(ChangePasswordRequestDTO changePasswordRequestDto);
         Task<ProfileUpdateUserDTO> UpdateProfileAsync(string Email,ProfileUpdateUserDTO profileUpdateUser);
         Task<UserProfile> GetMyProfileByEmailAsync(string Email);
-        Task<Object> DeleteMyProfileAsync(int id);
+        Task<object> UpdatePhoneNumber(string Phone,string Email);
+        Task<object> DeleteMyProfileAsync(int id);
     }
 }

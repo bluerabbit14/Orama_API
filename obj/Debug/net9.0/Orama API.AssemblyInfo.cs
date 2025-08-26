@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Orama API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0877d09966922bc07de8ab8b137d47723e2b66ae")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+60a695cfc8551fafac39640ab2488e1834a782b7")]
 [assembly: System.Reflection.AssemblyProductAttribute("Orama API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Orama API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
