@@ -17,3 +17,6 @@ obj/
 
 # Other
 *.log
+
+# Environment variables
+.env

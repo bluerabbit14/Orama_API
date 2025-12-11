@@ -3,6 +3,7 @@ using Orama_API.Data;
 using Orama_API.Domain;
 using Orama_API.DTO;
 using Orama_API.Interfaces;
+using Microsoft.Data.SqlClient;
 
 namespace Orama_API.Services
 {
@@ -18,50 +19,66 @@ namespace Orama_API.Services
 
         public async Task<SignUpResponseDTO> RegisterAsync(SignUpRequestDTO signUpRequestDto)
         {
-            if (string.IsNullOrWhiteSpace(signUpRequestDto.Name))
-                throw new ArgumentException("Name is required.");
-
-            if (string.IsNullOrWhiteSpace(signUpRequestDto.Email))
-                throw new ArgumentException("Email is required.");
-
-            if (string.IsNullOrWhiteSpace(signUpRequestDto.Password))
-                throw new ArgumentException("Password is required.");
-
-
-            var existingUser = await _context.UserProfilies.FirstOrDefaultAsync(u =>
-                (!string.IsNullOrEmpty(signUpRequestDto.Email) && u.Email == signUpRequestDto.Email));
-
-            if (existingUser != null)
+            try
             {
-                if (!string.IsNullOrEmpty(signUpRequestDto.Email) && existingUser.Email == signUpRequestDto.Email)
+                if (signUpRequestDto == null)
+                    throw new ArgumentNullException(nameof(signUpRequestDto), "SignUp request cannot be null");
+
+                if (string.IsNullOrWhiteSpace(signUpRequestDto.Name))
+                    throw new ArgumentException("Name is required.");
+
+                if (string.IsNullOrWhiteSpace(signUpRequestDto.Email))
+                    throw new ArgumentException("Email is required.");
+
+                if (string.IsNullOrWhiteSpace(signUpRequestDto.Password))
+                    throw new ArgumentException("Password is required.");
+
+                var existingUser = await _context.UserProfilies.FirstOrDefaultAsync(u =>
+                    (!string.IsNullOrEmpty(signUpRequestDto.Email) && u.Email == signUpRequestDto.Email));
+
+                if (existingUser != null)
                 {
-                    var conflictMessage = "Email is already registered.";
-                    throw new InvalidOperationException(conflictMessage);
+                    if (!string.IsNullOrEmpty(signUpRequestDto.Email) && existingUser.Email == signUpRequestDto.Email)
+                    {
+                        var conflictMessage = "Email is already registered.";
+                        throw new InvalidOperationException(conflictMessage);
+                    }
                 }
+                var newUser = new UserProfile
+                {
+                    Name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(signUpRequestDto.Name.ToLower()),
+                    Email = signUpRequestDto.Email,
+                    Password = signUpRequestDto.Password,
+                    Role = "Admin",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                await _context.UserProfilies.AddAsync(newUser);
+                await _context.SaveChangesAsync();
+
+                var result = new SignUpResponseDTO
+                {
+                    Message = "User Registered Successfully",
+                    UserId = newUser.UserId,
+                    Role = newUser.Role,
+                    Email = newUser.Email ?? string.Empty,
+                    CreatedAt = newUser.CreatedAt,
+                };
+                return result;
             }
-            var newUser = new UserProfile
+            catch (SqlException sqlEx)
             {
-                Name = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(signUpRequestDto.Name.ToLower()),
-                Email = signUpRequestDto.Email,
-                Password = signUpRequestDto.Password,
-                Role = "Admin",
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
-
-            await _context.UserProfilies.AddAsync(newUser);
-            await _context.SaveChangesAsync();
-
-            var result = new SignUpResponseDTO
+                // Handle SQL Server specific errors
+                Console.WriteLine($"SQL Error in Admin RegisterAsync: {sqlEx.Message}");
+                throw new InvalidOperationException($"Database error: {sqlEx.Message}", sqlEx);
+            }
+            catch (DbUpdateException dbEx)
             {
-                Message = "User Registered Successfully",
-                UserId = newUser.UserId,
-                Role = newUser.Role,
-                Email = newUser.Email ?? string.Empty,
-                CreatedAt = newUser.CreatedAt,
-            };
-            return result;
-
+                // Handle Entity Framework database update errors
+                Console.WriteLine($"Database Update Error in Admin RegisterAsync: {dbEx.Message}");
+                throw new InvalidOperationException($"Database update error: {dbEx.Message}", dbEx);
+            }
         }
         public async Task<LoginResponseDTO> LoginAsync(LoginRequestDTO logInRequestDto)
         {

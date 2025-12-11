@@ -6,6 +6,10 @@ using Orama_API.Data;
 using Orama_API.Interfaces;
 using Orama_API.Services;
 using System.Text;
+using DotNetEnv;
+
+// Load .env file
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,6 +102,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddDbContext<UserDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("OramaMAUIConnection")));
 
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IEmailService, EmailService>();

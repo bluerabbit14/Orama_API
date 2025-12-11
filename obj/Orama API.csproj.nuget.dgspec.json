@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Orama-ASP.NET-API\\Orama API.csproj": {}
+    "D:\\Orama_API\\Orama API.csproj": {}
   },
   "projects": {
-    "D:\\Orama-ASP.NET-API\\Orama API.csproj": {
+    "D:\\Orama_API\\Orama API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Orama-ASP.NET-API\\Orama API.csproj",
+        "projectUniqueName": "D:\\Orama_API\\Orama API.csproj",
         "projectName": "Orama API",
-        "projectPath": "D:\\Orama-ASP.NET-API\\Orama API.csproj",
+        "projectPath": "D:\\Orama_API\\Orama API.csproj",
         "packagesPath": "C:\\Users\\inest\\.nuget\\packages\\",
-        "outputPath": "D:\\Orama-ASP.NET-API\\obj\\",
+        "outputPath": "D:\\Orama_API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -45,12 +45,16 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "DotNetEnv": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
             "JsonWebToken": {
               "target": "Package",
               "version": "[1.9.4, )"
@@ -117,7 +121,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

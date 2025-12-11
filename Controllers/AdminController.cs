@@ -22,6 +22,9 @@ namespace Orama_API.Controllers
         {
             try
             {
+                if (sigUpRequestDto == null)
+                    return BadRequest(new { message = "Request body cannot be null" });
+
                 var response = await _adminService.RegisterAsync(sigUpRequestDto);
                 return Ok(response);
             }
@@ -33,7 +36,15 @@ namespace Orama_API.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-
+            catch (Exception ex)
+            {
+                // Log the exception for debugging
+                Console.WriteLine($"Error in Admin RegisterAsync: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                
+                // Return a more informative error message
+                return StatusCode(500, new { message = "An error occurred while registering the admin user", error = ex.Message });
+            }
         }
         [HttpPost("Authorize")]
         public async Task<IActionResult> LoginAsync(LoginRequestDTO logInRequestDto)

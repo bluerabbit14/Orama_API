@@ -62,7 +62,7 @@ namespace Orama_API.Migrations
 
                     b.HasIndex("ExpiresAt");
 
-                    b.ToTable("OTPs");
+                    b.ToTable("OTPs", (string)null);
                 });
 
             modelBuilder.Entity("Orama_API.Domain.UserProfile", b =>
@@ -168,7 +168,7 @@ namespace Orama_API.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("UserProfilies");
+                    b.ToTable("UserProfilies", (string)null);
                 });
 #pragma warning restore 612, 618
         }

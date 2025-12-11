@@ -4,7 +4,7 @@ using Orama_API.Data;
 using Orama_API.DTO;
 using Orama_API.Interfaces;
 using Orama_API.Domain;
-using System.Net;
+using System.Net.Http.Json;
 using System.Net.Mail;
 
 namespace Orama_API.Services
@@ -13,11 +13,13 @@ namespace Orama_API.Services
     {
         private readonly UserDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public EmailService(UserDbContext context, IConfiguration configuration)
+        public EmailService(UserDbContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
             _context = context;
             _configuration = configuration;
+            _httpClientFactory = httpClientFactory;
         }
         
         public async Task<bool> IsEmailValidAsync(string email)
@@ -122,9 +124,8 @@ namespace Orama_API.Services
 
                 try
                 {
-                    // Send email
-                    await SendEmailAsync(email, "Email Verification OTP", 
-                        $"Your verification OTP is: {otp}\n\nThis OTP will expire in 5 minutes.");
+                    // Send email with OTP and expiry time
+                    await SendEmailAsync(email, otp, expiry);
 
                     return new EmailOTPResponseDTO
                     {
@@ -280,10 +281,16 @@ namespace Orama_API.Services
             try
             {
                 var result = await SendOTPAsync(email);
+                if (!result.Success)
+                {
+                    Console.WriteLine($"ResendEmailOTPAsync failed for {email}: {result.Message}");
+                }
                 return result.Success;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Exception in ResendEmailOTPAsync for {email}: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return false;
             }
         }
@@ -294,42 +301,75 @@ namespace Orama_API.Services
             return _random.Next(100000, 999999).ToString();
         }
         
-        private async Task SendEmailAsync(string toEmail, string subject, string body)
+        private async Task SendEmailAsync(string toEmail, string otp, DateTime expiresAt)
         {
-            // Get settings from configuration or environment variables
-            var smtpSettings = _configuration.GetSection("SmtpSettings");
-            var smtpServer = smtpSettings["Server"] ?? "smtp.gmail.com";
-            var smtpPort = int.Parse(smtpSettings["Port"] ?? "587");
+            // Get EmailJS settings from configuration or environment variables
+            var emailJSSettings = _configuration.GetSection("EmailJSSettings");
             
-            // Try to get from environment variables first, then configuration
-            var smtpUsername = Environment.GetEnvironmentVariable("SMTP_USERNAME") 
-                ?? smtpSettings["Username"] 
-                ?? throw new InvalidOperationException("SMTP Username not configured");
+            var serviceId = Environment.GetEnvironmentVariable("EMAILJS_SERVICE_ID") 
+                ?? emailJSSettings["ServiceId"] 
+                ?? throw new InvalidOperationException("EmailJS Service ID not configured");
             
-            var smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD") 
-                ?? smtpSettings["Password"] 
-                ?? throw new InvalidOperationException("SMTP Password not configured");
+            var templateId = Environment.GetEnvironmentVariable("EMAILJS_TEMPLATE_ID") 
+                ?? emailJSSettings["TemplateId"] 
+                ?? throw new InvalidOperationException("EmailJS Template ID not configured");
             
-            var fromEmail = Environment.GetEnvironmentVariable("SMTP_FROMEMAIL") 
-                ?? smtpSettings["FromEmail"] 
-                ?? smtpUsername;
+            var publicKey = Environment.GetEnvironmentVariable("EMAILJS_PUBLIC_KEY") 
+                ?? emailJSSettings["PublicKey"] 
+                ?? throw new InvalidOperationException("EmailJS Public Key not configured");
 
-            using var client = new SmtpClient(smtpServer, smtpPort)
+            // EmailJS API endpoint
+            var apiUrl = "https://api.emailjs.com/api/v1.0/email/send";
+
+            // Format expiry time for display
+            // Format: "HH:mm:ss" or "MM/dd/yyyy HH:mm:ss" depending on template needs
+            var expiryTimeFormatted = expiresAt.ToString("HH:mm:ss");
+
+            // Prepare the request payload with correct template parameters
+            // Based on EmailJS template: {{passcode}}, {{time}}, {{email}}
+            var requestPayload = new
             {
-                EnableSsl = true,
-                Credentials = new NetworkCredential(smtpUsername, smtpPassword)
+                service_id = serviceId,
+                template_id = templateId,
+                user_id = publicKey,
+                template_params = new
+                {
+                    email = toEmail,           // {{email}} in template
+                    passcode = otp,            // {{passcode}} in template
+                    time = expiryTimeFormatted // {{time}} in template
+                }
             };
 
-            var message = new MailMessage
+            try
             {
-                From = new MailAddress(fromEmail),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = false
-            };
-            message.To.Add(toEmail);
+                // Create HttpClient instance
+                using var httpClient = _httpClientFactory.CreateClient();
+                
+                // Send POST request to EmailJS API
+                var response = await httpClient.PostAsJsonAsync(apiUrl, requestPayload);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"EmailJS API Error - Status: {response.StatusCode}, Content: {errorContent}");
+                    throw new HttpRequestException($"EmailJS API returned error: {response.StatusCode} - {errorContent}");
+                }
 
-            await client.SendMailAsync(message);
+                // EmailJS returns 200 OK on success
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"EmailJS response: {responseContent}");
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error sending email via EmailJS: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error sending email: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
         }
         
         public async Task<object> DebugOTPAsync(EmailOTPRequestDTO request)

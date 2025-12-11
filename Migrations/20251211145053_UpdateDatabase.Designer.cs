@@ -12,8 +12,8 @@ using Orama_API.Data;
 namespace Orama_API.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    [Migration("20250723140055_AddMig")]
-    partial class AddMig
+    [Migration("20251211145053_UpdateDatabase")]
+    partial class UpdateDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
